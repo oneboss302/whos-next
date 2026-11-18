@@ -36,7 +36,7 @@
   }
   .wheel-wrap {
     position: relative;
-    width: min(860px, 96vw);
+    width: min(640px, 92vw, 58vh);
     aspect-ratio: 1 / 1;
     margin-bottom: 28px;
   }
@@ -219,7 +219,7 @@ function drawWheel() {
     ctx.textAlign = "right";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#1a1a1a";
-    ctx.font = "600 26px -apple-system, sans-serif";
+    ctx.font = "600 22px -apple-system, sans-serif";
     const lines = wrapText(ctx, names[i], radius - 90);
     const lineHeight = 17;
     const totalH = lines.length * lineHeight;
