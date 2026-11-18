@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who's Next? Satire Wheel</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #171a23;
+    --accent: #ff4d6d;
+    --accent2: #ffd166;
+    --text: #f2f2f2;
+    --muted: #9aa0ab;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(circle at 50% 0%, #241a28, var(--bg) 60%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 60px;
+  }
+  h1 { margin: 0 0 4px; font-size: 1.8rem; letter-spacing: 0.5px; text-align: center; }
+  h1 span { color: var(--accent); }
+  p.tagline {
+    color: var(--muted);
+    margin: 0 0 28px;
+    text-align: center;
+    max-width: 460px;
+    font-size: 0.95rem;
+  }
+  .wheel-wrap {
+    position: relative;
+    width: min(420px, 86vw);
+    aspect-ratio: 1 / 1;
+    margin-bottom: 28px;
+  }
+  .pointer {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 16px solid transparent;
+    border-right: 16px solid transparent;
+    border-top: 26px solid var(--accent);
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
+    z-index: 3;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: 0 0 0 6px #2a2233, 0 0 40px rgba(255,77,109,0.18), 0 20px 40px rgba(0,0,0,0.5);
+    transition: transform 4.5s cubic-bezier(0.15, 0.85, 0.25, 1);
+    background: #1c2030;
+  }
+  .hub {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 56px; height: 56px;
+    transform: translate(-50%, -50%);
+    background: var(--panel);
+    border-radius: 50%;
+    border: 3px solid var(--accent);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+  button#spinBtn {
+    background: linear-gradient(135deg, var(--accent), #ff8fa3);
+    color: #1a1a1a;
+    border: none;
+    padding: 14px 36px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(255,77,109,0.35);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    letter-spacing: 0.5px;
+  }
+  button#spinBtn:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(255,77,109,0.45); }
+  button#spinBtn:active { transform: translateY(0); }
+  button#spinBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .result {
+    margin-top: 26px;
+    min-height: 70px;
+    width: min(480px, 92vw);
+    text-align: center;
+    background: var(--panel);
+    border: 1px solid #2d2838;
+    border-radius: 14px;
+    padding: 18px 24px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .result.show { opacity: 1; transform: translateY(0); }
+  .result .label { color: var(--accent2); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+  .result .victim { font-size: 1.15rem; font-weight: 600; margin-bottom: 10px; }
+  .result .reported { color: var(--text); font-size: 0.95rem; margin-bottom: 8px; }
+  .result .status { color: var(--accent2); font-size: 0.85rem; margin-bottom: 8px; }
+  .result .joke { color: var(--muted); font-size: 0.9rem; font-style: italic; margin-bottom: 10px; }
+  .result a { color: var(--accent2); font-size: 0.8rem; }
+
+  footer {
+    margin-top: 34px;
+    color: #5c5868;
+    font-size: 0.75rem;
+    text-align: center;
+    max-width: 480px;
+  }
+</style>
+</head>
+<body>
+
+<h1>🎡 Who's <span>Next?</span></h1>
+<p class="tagline">A satirical wheel of real 2026 cyber incidents. Each card lists what the cited report says, and the status line shows who confirmed it.</p>
+
+<div class="wheel-wrap">
+  <div class="pointer"></div>
+  <canvas id="wheel" width="600" height="600"></canvas>
+  <div class="hub">🔓</div>
+</div>
+
+<button id="spinBtn">SPIN FOR THE NEXT VICTIM</button>
+
+<div class="result" id="result">
+  <div class="label">Breach Report</div>
+  <div class="victim" id="victim">—</div>
+  <div class="reported" id="reported"></div>
+  <div class="status" id="status"></div>
+  <div class="joke" id="joke"></div>
+  <a id="source" href="#" target="_blank" rel="noopener"></a>
+</div>
+
+<footer>Facts are taken from the cited reports; the jokes are opinion. Hacker claims are labeled as claims. Corrections welcome.</footer>
+
+<script>
+const victims = [
+  { short: "Fairlife (Coca-Cola)",
+    name: "Fairlife, Coca-Cola's dairy subsidiary",
+    reported: "A July 2026 ransomware attack forced it to suspend production at its dairy facility (reported July 16, 2026).",
+    status: "Status: reported, citing TechCrunch.",
+    joke: "The one thing they could not hold hostage was the milk.",
+    source: "https://www.cm-alliance.com/cybersecurity-blog/major-cyber-attacks-data-breaches-ransomware-attacks-in-july-2026" },
+  { short: "Indra Group",
+    name: "Indra Group, Spanish defense and technology firm",
+    reported: "A July 1, 2026 ransomware attack reportedly led to data theft; the SafePay group is listed as the attacker.",
+    status: "Status: reported. Attack on a subsidiary not confirmed in the source.",
+    joke: "A defense and technology firm, hit by a group named SafePay. The irony was not on purpose.",
+    source: "https://www.cm-alliance.com/cybersecurity-blog/major-cyber-attacks-data-breaches-ransomware-attacks-in-july-2026" },
+  { short: "Rituals cosmetics",
+    name: "Rituals, cosmetics company",
+    reported: "Confirmed a data breach of customer personal information after hackers compromised its membership database, potentially affecting 41 million customers.",
+    status: "Status: breach confirmed; exact number not confirmed.",
+    joke: "The loyalty program finally earned its keep.",
+    source: "https://www.kaseya.com/blog/the-week-in-breach-news-04-29-26/" },
+  { short: "DHS HSIN",
+    name: "U.S. Department of Homeland Security, Homeland Security Information Network",
+    reported: "A DHS spokesperson confirmed the intrusion to BleepingComputer on July 1, 2026. DHS said there was no indication classified networks were affected.",
+    status: "Status: confirmed by DHS.",
+    joke: "The agency that tracks threats got tracked.",
+    source: "https://www.bleepingcomputer.com/news/security/dhs-confirms-hackers-breached-hsin-info-sharing-platform/" },
+  { short: "ATF",
+    name: "Bureau of Alcohol, Tobacco, Firearms and Explosives (ATF)",
+    reported: "A spokesperson confirmed a ransomware group gained access to a computer system (Reuters, August 27, 2026). The agency designated it a 'major incident'. Qilin claimed the attack.",
+    status: "Status: confirmed by the agency; group's claim.",
+    joke: "A federal agency that tracks illegal weapons now has to track its own ransomware.",
+    source: "https://tribune.com.pk/story/2626100/us-federal-agency-confirms-data-breach-in-wake-of-claims-by-ransomware-group" }
+];
+
+const colors = ["#ff4d6d","#ffd166","#45c4ff","#06d6a0","#8338ec","#fb5607","#3a86ff","#ef476f","#ffd166","#ff4d6d"];
+
+const canvas = document.getElementById('wheel');
+const ctx = canvas.getContext('2d');
+const size = canvas.width;
+const center = size / 2;
+const radius = center - 6;
+const segCount = victims.length;
+const segAngle = (2 * Math.PI) / segCount;
+
+function wrapText(ctx, text, maxWidth) {
+  const words = text.split(' ');
+  const lines = [];
+  let line = '';
+  for (const w of words) {
+    const test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = w;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function drawWheel() {
+  ctx.clearRect(0, 0, size, size);
+  for (let i = 0; i < segCount; i++) {
+    const start = i * segAngle;
+    const end = start + segAngle;
+
+    ctx.beginPath();
+    ctx.moveTo(center, center);
+    ctx.arc(center, center, radius, start, end);
+    ctx.closePath();
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fill();
+    ctx.strokeStyle = "#1c2030";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.save();
+    ctx.translate(center, center);
+    ctx.rotate(start + segAngle / 2);
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#1a1a1a";
+    ctx.font = "600 14px -apple-system, sans-serif";
+    const lines = wrapText(ctx, victims[i].short, radius - 90);
+    const lineHeight = 17;
+    const totalH = lines.length * lineHeight;
+    lines.forEach((line, li) => {
+      ctx.fillText(line, radius - 24, -totalH / 2 + lineHeight / 2 + li * lineHeight);
+    });
+    ctx.restore();
+  }
+}
+
+drawWheel();
+
+let currentRotation = 0;
+let spinning = false;
+const spinBtn = document.getElementById('spinBtn');
+const resultBox = document.getElementById('result');
+const victimEl = document.getElementById('victim');
+const reportedEl = document.getElementById('reported');
+const statusEl = document.getElementById('status');
+const jokeEl = document.getElementById('joke');
+const sourceEl = document.getElementById('source');
+
+spinBtn.addEventListener('click', () => {
+  if (spinning) return;
+  spinning = true;
+  resultBox.classList.remove('show');
+  spinBtn.disabled = true;
+
+  const extraSpins = 6 + Math.random() * 3;
+  const randomStop = Math.random() * 2 * Math.PI;
+  const totalRotation = currentRotation + extraSpins * 2 * Math.PI + randomStop;
+
+  canvas.style.transform = `rotate(${totalRotation}rad)`;
+  currentRotation = totalRotation;
+
+  setTimeout(() => {
+    const normalized = ((currentRotation % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    const pointerAngle = (2 * Math.PI - normalized + (3 * Math.PI / 2)) % (2 * Math.PI);
+    const index = Math.floor(pointerAngle / segAngle) % segCount;
+    const v = victims[index];
+
+    victimEl.textContent = v.name;
+    reportedEl.textContent = v.reported;
+    statusEl.textContent = v.status;
+    jokeEl.textContent = v.joke;
+    sourceEl.href = v.source;
+    sourceEl.textContent = "Source";
+    resultBox.classList.add('show');
+    spinning = false;
+    spinBtn.disabled = false;
+  }, 4600);
+});
+</script>
+
+</body>
+</html>
