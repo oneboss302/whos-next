@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Who's Next? Satire Wheel</title>
+<title>Office Pool Wheel</title>
 <style>
   :root {
     --bg: #0f1117;
@@ -124,8 +124,8 @@
 </head>
 <body>
 
-<h1>🎡 Who's <span>Next?</span></h1>
-<p class="tagline">A satirical wheel of real 2026 cyber incidents. Each card lists what the cited report says, and the status line shows who confirmed it.</p>
+<h1>🎡 Office <span>Pool</span> Wheel</h1>
+<p class="tagline">Spin for a name. Pool rules are yours.</p>
 
 <div class="wheel-wrap">
   <div class="pointer"></div>
@@ -133,10 +133,10 @@
   <div class="hub">🔓</div>
 </div>
 
-<button id="spinBtn">SPIN FOR THE NEXT VICTIM</button>
+<button id="spinBtn">SPIN</button>
 
 <div class="result" id="result">
-  <div class="label">Breach Report</div>
+  <div class="label">Pick</div>
   <div class="victim" id="victim">—</div>
   <div class="reported" id="reported"></div>
   <div class="status" id="status"></div>
@@ -144,40 +144,30 @@
   <a id="source" href="#" target="_blank" rel="noopener"></a>
 </div>
 
-<footer>Facts are taken from the cited reports; the jokes are opinion. Hacker claims are labeled as claims. Corrections welcome.</footer>
+<footer>For office pool use.</footer>
 
 <script>
-const victims = [
-  { short: "Fairlife (Coca-Cola)",
-    name: "Fairlife, Coca-Cola's dairy subsidiary",
-    reported: "A July 2026 ransomware attack forced it to suspend production at its dairy facility (reported July 16, 2026).",
-    status: "Status: reported, citing TechCrunch.",
-    joke: "The one thing they could not hold hostage was the milk.",
-    source: "https://www.cm-alliance.com/cybersecurity-blog/major-cyber-attacks-data-breaches-ransomware-attacks-in-july-2026" },
-  { short: "Indra Group",
-    name: "Indra Group, Spanish defense and technology firm",
-    reported: "A July 1, 2026 ransomware attack reportedly led to data theft; the SafePay group is listed as the attacker.",
-    status: "Status: reported. Attack on a subsidiary not confirmed in the source.",
-    joke: "A defense and technology firm, hit by a group named SafePay. The irony was not on purpose.",
-    source: "https://www.cm-alliance.com/cybersecurity-blog/major-cyber-attacks-data-breaches-ransomware-attacks-in-july-2026" },
-  { short: "Rituals cosmetics",
-    name: "Rituals, cosmetics company",
-    reported: "Confirmed a data breach of customer personal information after hackers compromised its membership database, potentially affecting 41 million customers.",
-    status: "Status: breach confirmed; exact number not confirmed.",
-    joke: "The loyalty program finally earned its keep.",
-    source: "https://www.kaseya.com/blog/the-week-in-breach-news-04-29-26/" },
-  { short: "DHS HSIN",
-    name: "U.S. Department of Homeland Security, Homeland Security Information Network",
-    reported: "A DHS spokesperson confirmed the intrusion to BleepingComputer on July 1, 2026. DHS said there was no indication classified networks were affected.",
-    status: "Status: confirmed by DHS.",
-    joke: "The agency that tracks threats got tracked.",
-    source: "https://www.bleepingcomputer.com/news/security/dhs-confirms-hackers-breached-hsin-info-sharing-platform/" },
-  { short: "ATF",
-    name: "Bureau of Alcohol, Tobacco, Firearms and Explosives (ATF)",
-    reported: "A spokesperson confirmed a ransomware group gained access to a computer system (Reuters, August 27, 2026). The agency designated it a 'major incident'. Qilin claimed the attack.",
-    status: "Status: confirmed by the agency; group's claim.",
-    joke: "A federal agency that tracks illegal weapons now has to track its own ransomware.",
-    source: "https://tribune.com.pk/story/2626100/us-federal-agency-confirms-data-breach-in-wake-of-claims-by-ransomware-group" }
+const names = [
+  "Nissan",
+  "Coca-Cola",
+  "Allstate",
+  "Rituals",
+  "Indra Group",
+  "DentaQuest",
+  "Fairlife",
+  "UnitedHealth Group",
+  "Walmart",
+  "Target",
+  "Microsoft",
+  "Google",
+  "Amazon",
+  "Department of Homeland Security",
+  "FBI",
+  "ATF",
+  "CISA",
+  "IRS",
+  "Social Security Administration",
+  "Department of Defense"
 ];
 
 const colors = ["#ff4d6d","#ffd166","#45c4ff","#06d6a0","#8338ec","#fb5607","#3a86ff","#ef476f","#ffd166","#ff4d6d"];
@@ -187,7 +177,7 @@ const ctx = canvas.getContext('2d');
 const size = canvas.width;
 const center = size / 2;
 const radius = center - 6;
-const segCount = victims.length;
+const segCount = names.length;
 const segAngle = (2 * Math.PI) / segCount;
 
 function wrapText(ctx, text, maxWidth) {
@@ -230,7 +220,7 @@ function drawWheel() {
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#1a1a1a";
     ctx.font = "600 14px -apple-system, sans-serif";
-    const lines = wrapText(ctx, victims[i].short, radius - 90);
+    const lines = wrapText(ctx, names[i], radius - 90);
     const lineHeight = 17;
     const totalH = lines.length * lineHeight;
     lines.forEach((line, li) => {
@@ -269,14 +259,12 @@ spinBtn.addEventListener('click', () => {
     const normalized = ((currentRotation % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
     const pointerAngle = (2 * Math.PI - normalized + (3 * Math.PI / 2)) % (2 * Math.PI);
     const index = Math.floor(pointerAngle / segAngle) % segCount;
-    const v = victims[index];
-
-    victimEl.textContent = v.name;
-    reportedEl.textContent = v.reported;
-    statusEl.textContent = v.status;
-    jokeEl.textContent = v.joke;
-    sourceEl.href = v.source;
-    sourceEl.textContent = "Source";
+    victimEl.textContent = names[index];
+    reportedEl.textContent = "";
+    statusEl.textContent = "";
+    jokeEl.textContent = "";
+    sourceEl.removeAttribute("href");
+    sourceEl.textContent = "";
     resultBox.classList.add('show');
     spinning = false;
     spinBtn.disabled = false;
